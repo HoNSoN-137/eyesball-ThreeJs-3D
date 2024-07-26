@@ -122,23 +122,23 @@ function loadModelAndTexture(path){
 /*
  * HDR Loader加载场景
  */
-const rgbeLoader = new RGBELoader();
-rgbeLoader.load(
-  './hospital_room_8k.hdr',
-  (texture) => {
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
-    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-    scene.environment = envMap;
-    texture.dispose();
-    pmremGenerator.dispose();
-    render(); 
-  },
-  undefined,
-  (error) => {
-    console.error('Error loading HDR texture', error);
-  }
-);
+// const rgbeLoader = new RGBELoader();
+// rgbeLoader.load(
+//   './hospital_room_8k.hdr',
+//   (texture) => {
+//     const pmremGenerator = new THREE.PMREMGenerator(renderer);
+//     pmremGenerator.compileEquirectangularShader();
+//     const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+//     scene.environment = envMap;
+//     texture.dispose();
+//     pmremGenerator.dispose();
+//     render(); 
+//   },
+//   undefined,
+//   (error) => {
+//     console.error('Error loading HDR texture', error);
+//   }
+// );
 
 
 /*
@@ -195,21 +195,15 @@ function animateCamera(targetPosition, duration) {
 /* 
  * 上传图像的button
  */
-let currentOldTexture = null;
-
 function changeimage(imagePath) {
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(imagePath, function (newTexture) {
-        // Optional: corrects color space if needed
-        // newTexture.encoding = THREE.sRGBEncoding;
+            // Optional: corrects color space if needed
+            // newTexture.encoding = THREE.sRGBEncoding;
 
         gltfScene.traverse(function (child) {
             if (child.isMesh && child.material.name === "Material_back") {
-                if (!currentOldTexture) {
-                    currentOldTexture = child.material.map;
-                }
-                const oldTexture = currentOldTexture;
-
+                const oldTexture = child.material.map;
                 const vertexShader = `
                     varying vec2 vUv;
                     void main() {
@@ -247,16 +241,13 @@ function changeimage(imagePath) {
                     side: THREE.DoubleSide // 确保材质双面可见
                 });
 
+                shaderMaterial.name = child.material.name;
                 child.material = shaderMaterial;
                 child.material.needsUpdate = true;
-
-                // 更新 currentOldTexture 为新的 newTexture
-                currentOldTexture = newTexture;
             }
         });
     });
 };
-
 
 
 /* 
@@ -287,7 +278,8 @@ function Visible(a){  //a 區分in和ToggleButton
         if (child.isMesh)
         {
             if(child.material.name === 'Material_1' || 
-                child.material.name === 'Material_Sclera' ||  
+                child.material.name === 'Material_Sclera' ||
+                child.material.name === 'Material_1.001' ||  
                 child.material.name === 'Material_Iris')
                 if(a === 'in')
                     child.visible = false; 
