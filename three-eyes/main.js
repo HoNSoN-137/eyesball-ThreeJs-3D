@@ -195,15 +195,21 @@ function animateCamera(targetPosition, duration) {
 /* 
  * 上传图像的button
  */
+let currentOldTexture = null;
+
 function changeimage(imagePath) {
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(imagePath, function (newTexture) {
-            // Optional: corrects color space if needed
-            // newTexture.encoding = THREE.sRGBEncoding;
+        // Optional: corrects color space if needed
+        // newTexture.encoding = THREE.sRGBEncoding;
 
         gltfScene.traverse(function (child) {
             if (child.isMesh && child.material.name === "Material_back") {
-                const oldTexture = child.material.map;
+                if (!currentOldTexture) {
+                    currentOldTexture = child.material.map;
+                }
+                const oldTexture = currentOldTexture;
+
                 const vertexShader = `
                     varying vec2 vUv;
                     void main() {
@@ -243,10 +249,14 @@ function changeimage(imagePath) {
 
                 child.material = shaderMaterial;
                 child.material.needsUpdate = true;
+
+                // 更新 currentOldTexture 为新的 newTexture
+                currentOldTexture = newTexture;
             }
         });
     });
 };
+
 
 
 /* 
@@ -314,6 +324,7 @@ document.getElementById('image1').addEventListener('click',  function() {
 document.getElementById('image2').addEventListener('click',  function() {
     changeimage('right.jpg');
 });
+
 
 /*
  * Helper function to render the scene 这里是把场景应用上
