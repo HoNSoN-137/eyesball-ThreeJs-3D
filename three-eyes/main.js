@@ -55,7 +55,7 @@ loader.load(
         const textureLoader = new THREE.TextureLoader();
         textureLoader.load(imageSource, (texture) => {
             gltfScene.traverse((child) => {
-                if (child.isMesh && child.material.name === "Material_back") {
+                if (child.isMesh && child.material.name === "Material_inside") {
                     // 直接设置纹理
                     child.material.map = texture;
                     child.material.needsUpdate = true;
@@ -106,7 +106,7 @@ function loadModelAndTexture(path){
             const textureLoader = new THREE.TextureLoader();
             textureLoader.load(imageSource, (texture) => {
                 gltfScene.traverse((child) => {
-                    if (child.isMesh && child.material.name === "Material_back") {
+                    if (child.isMesh && child.material.name === "Material_inside") {
                         // 直接设置纹理
                         child.material.map = texture;
                         child.material.needsUpdate = true;
@@ -201,7 +201,7 @@ function changeimage(imagePath) {
         // newTexture.encoding = THREE.sRGBEncoding;
 
         gltfScene.traverse(function (child) {
-            if (child.isMesh && child.material.name === "Material_back") {
+            if (child.isMesh && child.material.name === "Material_inside") {
                 // 检查并存储旧纹理
                 if (!child.userData.oldTexture) {
                     child.userData.oldTexture = child.material.map;
@@ -282,9 +282,9 @@ function Visible(a){  //a 區分in和ToggleButton
         if (child.isMesh)
         {
             if(child.material.name === 'Material_Eyeball_front' ||
-                child.material.name === 'Material_outside_back' ||
-                child.material.name === 'Material_inside' ||
-                // child.material.name === 'Material_Sclera' ||
+                // child.material.name === 'Material_outside_back' ||
+                // child.material.name === 'Material_inside' ||
+                child.material.name === 'Material_Sclera' ||
                 // child.material.name === 'Material_Sclera_back' ||
                 child.material.name === 'Material_Iris')
                 if(a === 'in')
