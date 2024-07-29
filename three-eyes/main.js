@@ -6,7 +6,6 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 /*
  * 定义
  */
-let img = 'left.jpg'; //底圖眼背影像path
 let gltfScene;
 
 /*
@@ -14,7 +13,7 @@ let gltfScene;
  */
 // Create scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+scene.background = new THREE.Color(0xffffff);
 // Create camera
 const camera = new THREE.PerspectiveCamera(
     45,
@@ -122,23 +121,23 @@ function loadModelAndTexture(path){
 /*
  * HDR Loader加载场景
  */
-// const rgbeLoader = new RGBELoader();
-// rgbeLoader.load(
-//   './hospital_room_8k.hdr',
-//   (texture) => {
-//     const pmremGenerator = new THREE.PMREMGenerator(renderer);
-//     pmremGenerator.compileEquirectangularShader();
-//     const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-//     scene.environment = envMap;
-//     texture.dispose();
-//     pmremGenerator.dispose();
-//     render(); 
-//   },
-//   undefined,
-//   (error) => {
-//     console.error('Error loading HDR texture', error);
-//   }
-// );
+const rgbeLoader = new RGBELoader();
+rgbeLoader.load(
+  './hospital_room_8k.hdr',
+  (texture) => {
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+    scene.environment = envMap;
+    texture.dispose();
+    pmremGenerator.dispose();
+    render(); 
+  },
+  undefined,
+  (error) => {
+    console.error('Error loading HDR texture', error);
+  }
+);
 
 
 /*
@@ -282,9 +281,11 @@ function Visible(a){  //a 區分in和ToggleButton
    gltfScene.traverse(function (child) {
         if (child.isMesh)
         {
-            if(child.material.name === 'Material_1' || 
-                child.material.name === 'Material_Sclera' ||
-                child.material.name === 'Material_1.001' ||  
+            if(child.material.name === 'Material_Eyeball_front' ||
+                child.material.name === 'Material_outside_back' ||
+                child.material.name === 'Material_inside' ||
+                // child.material.name === 'Material_Sclera' ||
+                // child.material.name === 'Material_Sclera_back' ||
                 child.material.name === 'Material_Iris')
                 if(a === 'in')
                     child.visible = false; 
