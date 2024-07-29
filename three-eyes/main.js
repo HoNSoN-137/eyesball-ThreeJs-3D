@@ -198,12 +198,17 @@ function animateCamera(targetPosition, duration) {
 function changeimage(imagePath) {
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(imagePath, function (newTexture) {
-            // Optional: corrects color space if needed
-            // newTexture.encoding = THREE.sRGBEncoding;
+        // Optional: corrects color space if needed
+        // newTexture.encoding = THREE.sRGBEncoding;
 
         gltfScene.traverse(function (child) {
             if (child.isMesh && child.material.name === "Material_back") {
-                const oldTexture = child.material.map;
+                // 检查并存储旧纹理
+                if (!child.userData.oldTexture) {
+                    child.userData.oldTexture = child.material.map;
+                }
+                const oldTexture = child.userData.oldTexture;
+
                 const vertexShader = `
                     varying vec2 vUv;
                     void main() {
@@ -235,9 +240,8 @@ function changeimage(imagePath) {
                     uniforms: uniforms,
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
-                    /* 下面两行是控制半透明效果 */
-                    // transparent: true,
-                    // blending: THREE.AdditiveBlending,
+                    // transparent: true, // 可选：启用半透明效果
+                    // blending: THREE.AdditiveBlending, // 可选：设置混合模式
                     side: THREE.DoubleSide // 确保材质双面可见
                 });
 
@@ -248,6 +252,7 @@ function changeimage(imagePath) {
         });
     });
 };
+
 
 
 /* 
