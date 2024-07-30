@@ -184,7 +184,7 @@ function animateCamera(targetPosition, duration) {
 
 
 /* 
- * 上传图像的button
+ * 上传图像的button (new)
  */
 function changeimage(imagePath) {
     const textureLoader = new THREE.TextureLoader();
