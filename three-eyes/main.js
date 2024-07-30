@@ -3,11 +3,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 //import * as TWEEN from 'three/examples/jsm/loaders/tween.umd.js'
+
+
 /*
  * 定义
  */
 let gltfScene;
-let tag = 1;      
+let tag = 1;
+let imagePaths = [];
+
+
 /*
  * 基础场景搭建
  */
@@ -87,7 +92,9 @@ loader.load(
  * 重加载眼球影像
  */
 function loadModelAndTexture(path){
+    //reset global variable
     tag =1;
+    imagePaths = [];
     
     if (gltfScene !== null) {
         scene.remove(gltfScene);
@@ -187,62 +194,88 @@ function animateCamera(targetPosition, duration) {
  * 上传图像的button (new)
  */
 function changeimage(imagePath) {
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(imagePath, function (newTexture) {
-        // Optional: corrects color space if needed
-        // newTexture.encoding = THREE.sRGBEncoding;
+    let index = imagePaths.indexOf(imagePath);
+    if (index !== -1) {
+        imagePaths.splice(index, 1);
+    } else {
+        imagePaths.push(imagePath);
+    }
+    //console.log("Current image paths:", imagePaths);
 
-        gltfScene.traverse(function (child) {
-            if (child.isMesh && child.material.name === "Material_inside") {
-                // 检查并存储旧纹理
-                if (!child.userData.oldTexture) {
-                    child.userData.oldTexture = child.material.map;
+    // 加载并应用所有图像路径中的纹理
+    if (imagePaths.length === 0) {
+        applyTexturesToMaterial([]);
+    } else {
+        const textureLoader = new THREE.TextureLoader();
+        const textures = [];
+
+        let texturesLoaded = 0;
+
+        // 遍历imagePaths
+        imagePaths.forEach((path, idx) => {
+            textureLoader.load(path, function (texture) {
+                textures[idx] = texture;
+                texturesLoaded++;
+                if (texturesLoaded === imagePaths.length) {
+                    applyTexturesToMaterial(textures);
                 }
-                const oldTexture = child.userData.oldTexture;
-
-                const vertexShader = `
-                    varying vec2 vUv;
-                    void main() {
-                        vUv = uv;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `;
-
-                const fragmentShader = `
-                    uniform sampler2D oldTexture;
-                    uniform sampler2D newTexture;
-                    varying vec2 vUv;
-                    void main() {
-                        vec4 oldColor = texture2D(oldTexture, vUv);
-                        vec4 newColor = texture2D(newTexture, vUv);
-                        // 下面两行是控制半透明强度
-                        // oldColor.a = 0.9;
-                        // newColor.a = 0.9;
-                        gl_FragColor = oldColor + newColor * 0.85; // 调节新旧图像比例
-                    }
-                `;
-
-                const uniforms = {
-                    oldTexture: { value: oldTexture },
-                    newTexture: { value: newTexture }
-                };
-
-                const shaderMaterial = new THREE.ShaderMaterial({
-                    uniforms: uniforms,
-                    vertexShader: vertexShader,
-                    fragmentShader: fragmentShader,
-                    // transparent: true, // 可选：启用半透明效果
-                    // blending: THREE.AdditiveBlending, // 可选：设置混合模式
-                    side: THREE.DoubleSide // 确保材质双面可见
-                });
-
-                shaderMaterial.name = child.material.name;
-                child.material = shaderMaterial;
-                child.material.needsUpdate = true;
-            }
+            });
         });
+    }
+}
+
+
+function applyTexturesToMaterial(textures) {
+    gltfScene.traverse(function (child) {
+        if (child.isMesh && child.material.name === "Material_inside") {
+            // 检查并存储旧纹理
+            if (!child.userData.oldTexture) {
+                child.userData.oldTexture = child.material.map;
+            }
+            const oldTexture = child.userData.oldTexture;
+
+            const vertexShader = `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `;
+
+            const fragmentShader = `
+                uniform sampler2D oldTexture;
+                varying vec2 vUv;
+                ${textures.map((_, i) => `uniform sampler2D newTexture${i};`).join('\n')}
+                void main() {
+                    vec4 color = texture2D(oldTexture, vUv);
+                    ${textures.map((_, i) => `color += texture2D(newTexture${i}, vUv) * 0.85 / ${textures.length.toFixed(1)};`).join('\n')}
+                    gl_FragColor = color;
+                }
+            `;
+
+            const uniforms = {
+                oldTexture: { value: oldTexture },
+                ...textures.reduce((acc, texture, i) => {
+                    acc[`newTexture${i}`] = { value: texture };
+                    return acc;
+                }, {})
+            };
+
+            const shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: vertexShader,
+                fragmentShader: fragmentShader,
+                // transparent: true, // 可选：启用半透明效果
+                // blending: THREE.AdditiveBlending, // 可选：设置混合模式
+                side: THREE.DoubleSide // 确保材质双面可见
+            });
+
+            shaderMaterial.name = child.material.name;
+            child.material = shaderMaterial;
+            child.material.needsUpdate = true;
+        }
     });
-};
+}
 
 
 
@@ -265,6 +298,10 @@ function changeimage(imagePath) {
 //     ambientLight.intensity = event.target.value;
 // });
 
+
+/*
+ * 材质显示的 显示/消失 动画
+ */
 function fadeMaterial(material, duration, visible) {
     new TWEEN.Tween(material)
         .to({ opacity: visible? 1:0 }, duration)
@@ -285,17 +322,17 @@ function fadeInMaterial(material, duration) {
         })
         .start();
 }
+
+
 /* 
  * 材质显示的按钮
- */ 
-  
+ */
 function Visible(a){  //a 區分in和ToggleButton 
     if(a === 'in')
         tag = 0;
     else 
         tag = !tag;
 
-        
     gltfScene.traverse(function (child) {
         if (child.isMesh)
         {
@@ -323,7 +360,6 @@ function Visible(a){  //a 區分in和ToggleButton
                         child.visible = false; 
                     fadeMaterial(child.material, 1500,0); 
                 }
-                    
         }
     }); 
 }
@@ -343,13 +379,16 @@ document.getElementById('RButton').addEventListener('click', function(event) {
   loadModelAndTexture('right.jpg');
   camera.position.set(400, 400, 400);
 });
+//镜头放大
 document.getElementById('inButton').addEventListener('click', function() {
     animateCamera(new THREE.Vector3(0, 0, 550), 2000);
     Visible('in');
 });
+//切换眼底图像
 document.getElementById('ToggleButton').addEventListener('click',  function() {
     Visible('ToggleButton');
 });
+//叠加的图像
 document.getElementById('image1').addEventListener('click',  function() {
     changeimage('left.jpg');
 });
