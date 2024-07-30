@@ -2,12 +2,12 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
-
+//import * as TWEEN from 'three/examples/jsm/loaders/tween.umd.js'
 /*
  * 定义
  */
 let gltfScene;
-
+let tag = 1;      
 /*
  * 基础场景搭建
  */
@@ -87,6 +87,8 @@ loader.load(
  * 重加载眼球影像
  */
 function loadModelAndTexture(path){
+    tag =1;
+    
     if (gltfScene !== null) {
         scene.remove(gltfScene);
         // 释放资源
@@ -164,30 +166,20 @@ window.addEventListener("resize", () => {
  * 更新相机位置（从眼球的外面进入到眼球内部）
  */
 function animateCamera(targetPosition, duration) {
-    // 动画开始时间 // 相机初始位置
-    const startTime = Date.now(); 
     const startPosition = camera.position.clone();
 
-    function updateCamera() {
-        // 已经过去的时间 // 完成的百分比
-        const elapsedTime = Date.now() - startTime; 
-        const fraction = elapsedTime / duration; 
-
-        if (fraction < 1) {
-            // 计算当前位置
-            camera.position.z = startPosition.z + (targetPosition.z - startPosition.z) * fraction;
-            camera.position.x = startPosition.x + (targetPosition.x - startPosition.x) * fraction;
-            camera.position.y = startPosition.y + (targetPosition.y - startPosition.y) * fraction;
-            // 继续动画 // 重新渲染场景
-            requestAnimationFrame(updateCamera); 
-            renderer.render(scene, camera); 
-        } else {
-            // 确保相机最终位置正确
+    const tween = new TWEEN.Tween(startPosition)
+        .to({ x: targetPosition.x, y: targetPosition.y, z: targetPosition.z }, duration)
+        .easing(TWEEN.Easing.Quadratic.InOut) // Use an easing function for smooth animation
+        .onUpdate(function() {
+            camera.position.set(startPosition.x, startPosition.y, startPosition.z);
+            renderer.render(scene, camera);
+        })
+        .onComplete(function() {
             camera.position.copy(targetPosition);
             renderer.render(scene, camera);
-        }
-    }
-    updateCamera();
+        })
+        .start();
 }
 
 
@@ -273,12 +265,38 @@ function changeimage(imagePath) {
 //     ambientLight.intensity = event.target.value;
 // });
 
-
+function fadeMaterial(material, duration, visible) {
+    new TWEEN.Tween(material)
+        .to({ opacity: visible? 1:0 }, duration)
+        .onUpdate(function() {
+            material.transparent = !visible;
+        })
+        .onComplete(function() {
+            material.visible = visible; // Hide the mesh after fade out
+        })
+        .start();
+}
+function fadeInMaterial(material, duration) {
+    material.visible = true; // Ensure the mesh is visible before fade in
+    new TWEEN.Tween(material)
+        .to({ opacity: 1 }, duration)
+        .onUpdate(function() {
+            material.transparent = 0;
+        })
+        .start();
+}
 /* 
  * 材质显示的按钮
  */ 
+  
 function Visible(a){  //a 區分in和ToggleButton 
-   gltfScene.traverse(function (child) {
+    if(a === 'in')
+        tag = 0;
+    else 
+        tag = !tag;
+
+        
+    gltfScene.traverse(function (child) {
         if (child.isMesh)
         {
             if(child.material.name === 'Material_Eyeball_front' ||
@@ -288,11 +306,25 @@ function Visible(a){  //a 區分in和ToggleButton
                 // child.material.name === 'Material_Sclera_back' ||
                 child.material.name === 'Material_Iris')
                 if(a === 'in')
-                    child.visible = false; 
-                else
-                    child.visible = !child.visible; 
+                {
+                    if(child.material.name === 'Material_Sclera' )
+                        child.visible = false; 
+                    fadeMaterial(child.material, 1500,0); 
+                }
+                else if(a === 'ToggleButton' && tag )
+                {
+                    if(child.material.name === 'Material_Sclera' )
+                        child.visible = true; 
+                    fadeInMaterial(child.material, 1000); 
+                    
+                } else 
+                {
+                    if(child.material.name === 'Material_Sclera' )
+                        child.visible = false; 
+                    fadeMaterial(child.material, 1500,0); 
+                }
+                    
         }
-             
     }); 
 }
 
@@ -304,17 +336,19 @@ function Visible(a){  //a 區分in和ToggleButton
 // 左眼球图像按钮
 document.getElementById('LButton').addEventListener('click', function(event) {
   loadModelAndTexture('left.jpg');
+  camera.position.set(-400, 400, 400);
 });
 // 右眼球图像按钮
 document.getElementById('RButton').addEventListener('click', function(event) {
   loadModelAndTexture('right.jpg');
+  camera.position.set(400, 400, 400);
 });
 document.getElementById('inButton').addEventListener('click', function() {
-    animateCamera(new THREE.Vector3(400, 200, 550), 2000);
+    animateCamera(new THREE.Vector3(0, 0, 550), 2000);
     Visible('in');
 });
 document.getElementById('ToggleButton').addEventListener('click',  function() {
-    Visible(1);
+    Visible('ToggleButton');
 });
 document.getElementById('image1').addEventListener('click',  function() {
     changeimage('left.jpg');
@@ -331,6 +365,8 @@ function render() {
     renderer.render(scene, camera);
     controls.update();
     requestAnimationFrame(render);
-  }
+    TWEEN.update();
+}
+  
   
   render();
