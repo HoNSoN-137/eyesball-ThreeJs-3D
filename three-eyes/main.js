@@ -190,8 +190,13 @@ function animateCamera(targetPosition, duration) {
 }
 
 
-/* 
- * 上传图像的button (new)
+/**
+ * 
+ */
+
+
+/**
+ * 图像叠加
  */
 function changeimage(imagePath) {
     let index = imagePaths.indexOf(imagePath);
@@ -210,17 +215,22 @@ function changeimage(imagePath) {
         const textures = [];
 
         let texturesLoaded = 0;
+        alert("3");
 
         // 遍历imagePaths
         imagePaths.forEach((path, idx) => {
+            alert("5");
             textureLoader.load(path, function (texture) {
+                println(idx);
                 textures[idx] = texture;
                 texturesLoaded++;
+                alert("2");
                 if (texturesLoaded === imagePaths.length) {
                     applyTexturesToMaterial(textures);
                 }
             });
         });
+        alert("34");
     }
 }
 
@@ -273,6 +283,7 @@ function applyTexturesToMaterial(textures) {
             shaderMaterial.name = child.material.name;
             child.material = shaderMaterial;
             child.material.needsUpdate = true;
+            alert("1");
         }
     });
 }
@@ -390,10 +401,10 @@ document.getElementById('ToggleButton').addEventListener('click',  function() {
 });
 //叠加的图像
 document.getElementById('image1').addEventListener('click',  function() {
-    changeimage('left.jpg');
+    changeimage('eyebase.jpg');
 });
 document.getElementById('image2').addEventListener('click',  function() {
-    changeimage('right.jpg');
+    changeimage('007-3412-200.jpg');
 });
 
 
