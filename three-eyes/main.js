@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 //import * as TWEEN from 'three/examples/jsm/loaders/tween.umd.js'
+// import { convertTiffToJpg } from './convert.js';
 
 
 /*
@@ -49,53 +50,47 @@ const controls = new OrbitControls(camera, renderer.domElement);
  * GLTF Loader
  */
 const loader = new GLTFLoader();
-loader.load(
-    "./main1.glb",
-    (gltf) => {
-        gltfScene = gltf.scene;
-        scene.add(gltf.scene);
+function loadModelAndApplyTexture(path){
+    //reset global variable
+    tag =1;
+    imagePaths = [];
 
-        // 加载眼球影像
-        const imageSource = 'left.jpg'; //dault left eyes
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load(imageSource, (texture) => {
-            gltfScene.traverse((child) => {
-                if (child.isMesh && child.material.name === "Material_inside") {
-                    // 直接设置纹理
-                    child.material.map = texture;
-                    child.material.needsUpdate = true;
-                }
+    loader.load(
+        "./main1.glb",
+        (gltf) => {
+            gltfScene = gltf.scene;
+            scene.add(gltf.scene);
+
+            // 加载眼球影像
+            const imageSource = path; //dault left eyes
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(imageSource, (texture) => {
+                gltfScene.traverse((child) => {
+                    if (child.isMesh && child.material.name === "Material_inside") {
+                        // 直接设置纹理
+                        child.material.map = texture;
+                        child.material.needsUpdate = true;
+                    }
+                });
+                window.dispatchEvent(new Event('load'));
+            }, undefined, function (error) {
+                console.error('Error loading texture:', error);
             });
-            window.dispatchEvent(new Event('load'));
-        }, undefined, function (error) {
-            console.error('Error loading texture:', error);
-        });
-        // 保留原始材质，在插入图像时保留最初的图像纹理
-        // gltf.scene.traverse(function (child) {
-        //     if (child.isMesh) {
-        //         //child.geometry.computeVertexNormals(); // 重新计算法线
-        //         if (child.material.map) {
-        //             child.material.emissive = child.material.color;
-        //             child.material.emissiveMap = child.material.map;
-        //         }
-        //     }
-        // });
-    },
-    undefined,
-    (error) => {
-        console.error('An error happened', error);
-    }
-);
+
+        },
+        undefined,
+        (error) => {
+            console.error('An error happened', error);
+        }
+    );
+}
+loadModelAndApplyTexture('left.jpg')
 
 
 /*
  * 重加载眼球影像
  */
 function loadModelAndTexture(path){
-    //reset global variable
-    tag =1;
-    imagePaths = [];
-    
     if (gltfScene !== null) {
         scene.remove(gltfScene);
         // 释放资源
@@ -106,24 +101,6 @@ function loadModelAndTexture(path){
             }
         });
     }
-    loader.load(
-        "./main1.glb",
-        (gltf) => {
-            gltfScene = gltf.scene;
-            scene.add(gltf.scene);
-            const imageSource = path;
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(imageSource, (texture) => {
-                gltfScene.traverse((child) => {
-                    if (child.isMesh && child.material.name === "Material_inside") {
-                        // 直接设置纹理
-                        child.material.map = texture;
-                        child.material.needsUpdate = true;
-                    }
-                });
-            });
-        }
-    );
 }
 
 
@@ -190,13 +167,8 @@ function animateCamera(targetPosition, duration) {
 }
 
 
-/**
- * 
- */
-
-
-/**
- * 图像叠加
+/* 
+ * 上传图像的button (new)
  */
 function changeimage(imagePath) {
     let index = imagePaths.indexOf(imagePath);
@@ -215,22 +187,17 @@ function changeimage(imagePath) {
         const textures = [];
 
         let texturesLoaded = 0;
-        alert("3");
 
         // 遍历imagePaths
         imagePaths.forEach((path, idx) => {
-            alert("5");
             textureLoader.load(path, function (texture) {
-                println(idx);
                 textures[idx] = texture;
                 texturesLoaded++;
-                alert("2");
                 if (texturesLoaded === imagePaths.length) {
                     applyTexturesToMaterial(textures);
                 }
             });
         });
-        alert("34");
     }
 }
 
@@ -283,7 +250,6 @@ function applyTexturesToMaterial(textures) {
             shaderMaterial.name = child.material.name;
             child.material = shaderMaterial;
             child.material.needsUpdate = true;
-            alert("1");
         }
     });
 }
@@ -382,13 +348,13 @@ function Visible(a){  //a 區分in和ToggleButton
  */
 // 左眼球图像按钮
 document.getElementById('LButton').addEventListener('click', function(event) {
-  loadModelAndTexture('left.jpg');
-  camera.position.set(-400, 400, 400);
+    loadModelAndApplyTexture('left.jpg');
+    camera.position.set(-400, 400, 400);
 });
 // 右眼球图像按钮
 document.getElementById('RButton').addEventListener('click', function(event) {
-  loadModelAndTexture('right.jpg');
-  camera.position.set(400, 400, 400);
+    loadModelAndApplyTexture('right.jpg');
+    camera.position.set(400, 400, 400);
 });
 //镜头放大
 document.getElementById('inButton').addEventListener('click', function() {
@@ -404,7 +370,7 @@ document.getElementById('image1').addEventListener('click',  function() {
     changeimage('eyebase.jpg');
 });
 document.getElementById('image2').addEventListener('click',  function() {
-    changeimage('007-3412-200.jpg');
+    changeimage('right.jpg');
 });
 
 
