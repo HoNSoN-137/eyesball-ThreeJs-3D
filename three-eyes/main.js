@@ -60,23 +60,7 @@ function loadModelAndApplyTexture(path){
         (gltf) => {
             gltfScene = gltf.scene;
             scene.add(gltf.scene);
-
-            // 加载眼球影像
-            const imageSource = path; //dault left eyes
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(imageSource, (texture) => {
-                gltfScene.traverse((child) => {
-                    if (child.isMesh && child.material.name === "Material_inside") {
-                        // 直接设置纹理
-                        child.material.map = texture;
-                        child.material.needsUpdate = true;
-                    }
-                });
-                window.dispatchEvent(new Event('load'));
-            }, undefined, function (error) {
-                console.error('Error loading texture:', error);
-            });
-
+            changeimage(path);
         },
         undefined,
         (error) => {
@@ -177,7 +161,7 @@ function changeimage(imagePath) {
     } else {
         imagePaths.push(imagePath);
     }
-    //console.log("Current image paths:", imagePaths);
+    console.log("Current image paths:", imagePaths);
 
     // 加载并应用所有图像路径中的纹理
     if (imagePaths.length === 0) {
