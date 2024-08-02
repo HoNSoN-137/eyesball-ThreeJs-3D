@@ -72,23 +72,6 @@ loadModelAndApplyTexture('left.jpg')
 
 
 /*
- * 重加载眼球影像
- */
-function loadModelAndTexture(path){
-    if (gltfScene !== null) {
-        scene.remove(gltfScene);
-        // 释放资源
-        gltfScene.traverse((child) => {
-            if (child.isMesh) {
-                child.geometry.dispose();
-                child.material.dispose();
-            }
-        });
-    }
-}
-
-
-/*
  * HDR Loader加载场景
  */
 const rgbeLoader = new RGBELoader();
@@ -152,7 +135,7 @@ function animateCamera(targetPosition, duration) {
 
 
 /* 
- * 上传图像的button (new)
+ * 上传图像的button
  */
 function changeimage(imagePath) {
     let index = imagePaths.indexOf(imagePath);
