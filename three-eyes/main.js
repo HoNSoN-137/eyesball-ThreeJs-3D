@@ -12,6 +12,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 let gltfScene;
 let tag = 1;
 let imagePaths = [];
+const imagePathData = [];
 
 
 /*
@@ -64,7 +65,7 @@ function loadModelAndApplyTexture(path){
         (gltf) => {
             gltfScene = gltf.scene;
             scene.add(gltf.scene);
-            changeimage(path);
+            changeimage(path,1);
         },
         undefined,
         (error) => {
@@ -138,17 +139,60 @@ function animateCamera(targetPosition, duration) {
 }
 
 
+/**
+ * 图像透明处理
+ */
+function Transparent(imagePath,effect) {
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(imagePath, function(texture) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = texture.image.width;
+        canvas.height = texture.image.height;
+        context.drawImage(texture.image, 0, 0);
+
+        // 获取像素数据
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // 处理像素数据，将黑色区域变为透明
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i] < 10 && data[i + 1] < 10 && data[i + 2] < 10) {
+                data[i + 3] = 0;
+            }
+        }
+
+        // 将修改后的像素数据放回Canvas
+        context.putImageData(imageData, 0, 0);
+        const newImageUrl = canvas.toDataURL(); // 生成Base64数据URL
+        changeimage(newImageUrl,effect);
+    });
+}
+
+
+
+
 /* 
  * 上传图像的button
  */
-function changeimage(imagePath) {
-    let index = imagePaths.indexOf(imagePath);
+// 用于存储图像路径和对应的effect值
+
+
+// 修改changeimage函数以接受effect参数
+function changeimage(imagePath, effect) {
+    // 检查图像路径是否已存在
+    const index = imagePaths.indexOf(imagePath);
     if (index !== -1) {
+        // 如果存在，从imagePaths和imagePathData中删除
         imagePaths.splice(index, 1);
+        imagePathData.splice(index, 1);
     } else {
+        // 如果不存在，添加新的图像路径和effect
         imagePaths.push(imagePath);
+        imagePathData.push({ path: imagePath, effect });
     }
     console.log("Current image paths:", imagePaths);
+    console.log("Current image path data:", imagePathData);
 
     // 加载并应用所有图像路径中的纹理
     if (imagePaths.length === 0) {
@@ -156,26 +200,29 @@ function changeimage(imagePath) {
     } else {
         const textureLoader = new THREE.TextureLoader();
         const textures = [];
+        const effects = [];
 
         let texturesLoaded = 0;
 
-        // 遍历imagePaths
-        imagePaths.forEach((path, idx) => {
-            textureLoader.load(path, function (texture) {
+        // 遍历imagePathData
+        imagePathData.forEach((data, idx) => {
+            textureLoader.load(data.path, function (texture) {
                 textures[idx] = texture;
+                effects[idx] = data.effect;
                 texturesLoaded++;
-                if (texturesLoaded === imagePaths.length) {
-                    applyTexturesToMaterial(textures);
+                if (texturesLoaded === imagePathData.length) {
+                    applyTexturesToMaterial(textures, effects);
                 }
             });
         });
     }
 }
 
-
-function applyTexturesToMaterial(textures) {
+// 修改applyTexturesToMaterial函数以接受textures和effects参数
+function applyTexturesToMaterial(textures, effects) {
     gltfScene.traverse(function (child) {
         if (child.isMesh && child.material.name === "Material_inside") {
+            child.material.transparent = true;
             // 检查并存储旧纹理
             if (!child.userData.oldTexture) {
                 child.userData.oldTexture = child.material.map;
@@ -196,10 +243,11 @@ function applyTexturesToMaterial(textures) {
                 ${textures.map((_, i) => `uniform sampler2D newTexture${i};`).join('\n')}
                 void main() {
                     vec4 color = texture2D(oldTexture, vUv);
-                    ${textures.map((_, i) => `color += texture2D(newTexture${i}, vUv) * 0.85 / ${textures.length.toFixed(1)};`).join('\n')}
+                    ${textures.map((_, i) => `color += texture2D(newTexture${i}, vUv) * float(${effects[i]});`).join('\n')}
                     gl_FragColor = color;
                 }
             `;
+
 
             const uniforms = {
                 oldTexture: { value: oldTexture },
@@ -213,9 +261,9 @@ function applyTexturesToMaterial(textures) {
                 uniforms: uniforms,
                 vertexShader: vertexShader,
                 fragmentShader: fragmentShader,
-                // transparent: true, // 可选：启用半透明效果
-                // blending: THREE.AdditiveBlending, // 可选：设置混合模式
-                side: THREE.DoubleSide // 确保材质双面可见
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
 
             shaderMaterial.name = child.material.name;
@@ -224,6 +272,7 @@ function applyTexturesToMaterial(textures) {
         }
     });
 }
+
 
 
 
@@ -338,10 +387,10 @@ document.getElementById('ToggleButton').addEventListener('click',  function() {
 });
 //叠加的图像
 document.getElementById('image1').addEventListener('click',  function() {
-    changeimage('eyebase.jpg');
+    changeimage('eyebase.jpg',1);
 });
 document.getElementById('image2').addEventListener('click',  function() {
-    changeimage('right.jpg');
+    Transparent('007-3412-200.jpg',1.5);
 });
 
 
