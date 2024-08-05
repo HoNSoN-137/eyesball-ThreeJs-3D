@@ -12,7 +12,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 let gltfScene;
 let tag = 1;
 let imagePaths = [];
-const imagePathData = [];
+let imagePathData = [];
 
 
 /*
@@ -59,6 +59,7 @@ function loadModelAndApplyTexture(path){
     //reset global variable
     tag =1;
     imagePaths = [];
+    imagePathData = [];
 
     loader.load(
         "./main1.glb",
@@ -170,15 +171,9 @@ function Transparent(imagePath,effect) {
 }
 
 
-
-
 /* 
  * 上传图像的button
  */
-// 用于存储图像路径和对应的effect值
-
-
-// 修改changeimage函数以接受effect参数
 function changeimage(imagePath, effect) {
     // 检查图像路径是否已存在
     const index = imagePaths.indexOf(imagePath);
@@ -218,7 +213,7 @@ function changeimage(imagePath, effect) {
     }
 }
 
-// 修改applyTexturesToMaterial函数以接受textures和effects参数
+
 function applyTexturesToMaterial(textures, effects) {
     gltfScene.traverse(function (child) {
         if (child.isMesh && child.material.name === "Material_inside") {
@@ -272,28 +267,6 @@ function applyTexturesToMaterial(textures, effects) {
         }
     });
 }
-
-
-
-
-/* 
- * 创建并样式化滑动条，用于调节环境光亮度（要是网页大小要调整，这里要改为动态调整滑动条位置）
- */ 
-// const slider = document.createElement('input');
-// slider.type = 'range';
-// slider.min = 0;
-// slider.max = 10;
-// slider.value = ambientLight.intensity;
-// slider.step = 0.1;
-// slider.style.position = 'absolute';
-// slider.style.top = '10px';
-// slider.style.right = '10px';
-// slider.style.zIndex = 100;
-// document.body.appendChild(slider);
-// // 调节环境光亮度
-// slider.addEventListener('input', function (event) {
-//     ambientLight.intensity = event.target.value;
-// });
 
 
 /*
