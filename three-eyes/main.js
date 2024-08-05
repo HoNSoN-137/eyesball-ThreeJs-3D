@@ -10,7 +10,6 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
  * 定义
  */
 let gltfScene;
-let tag = 1;
 let imagePaths = [];
 let imagePathData = [];
 
@@ -36,18 +35,15 @@ scene.add(ambientLight);
 // Create renderer
 const renderer = new THREE.WebGLRenderer();
 // 这里是控制页面大小
-// const width = appContainer.clientWidth; // 获取 #app 容器的宽度
-// const height = appContainer.clientHeight; // 获取 #app 容器的高度
-// renderer.setSize(width, height);
 renderer.setSize(window.innerWidth, window.innerHeight);
-appContainer.appendChild(renderer.domElement);
+
 // Set camera position
 camera.position.set(400, 400, 400);
 camera.lookAt(0, 0, 0);
 // Add axesHelper 坐标轴
-// const axesHelper = new THREE.AxesHelper(300);
-// scene.add(axesHelper);
+
 // Orbit controls 控制鼠标对模型的缩放
+appContainer.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 
 
@@ -272,37 +268,24 @@ function applyTexturesToMaterial(textures, effects) {
 /*
  * 材质显示的 显示/消失 动画
  */
-function fadeMaterial(material, duration, visible) {
+function fadeMaterial(material, duration) {
     new TWEEN.Tween(material)
-        .to({ opacity: visible? 1:0 }, duration)
+        .to({ opacity:0 }, duration)
         .onUpdate(function() {
-            material.transparent = !visible;
+            material.transparent = true;
         })
         .onComplete(function() {
-            material.visible = visible; // Hide the mesh after fade out
+            material.visible = false; 
         })
         .start();
 }
-function fadeInMaterial(material, duration) {
-    material.visible = true; // Ensure the mesh is visible before fade in
-    new TWEEN.Tween(material)
-        .to({ opacity: 1 }, duration)
-        .onUpdate(function() {
-            material.transparent = 0;
-        })
-        .start();
-}
+
 
 
 /* 
  * 材质显示的按钮
  */
-function Visible(a){  //a 區分in和ToggleButton 
-    if(a === 'in')
-        tag = 0;
-    else 
-        tag = !tag;
-
+function Visible(){ 
     gltfScene.traverse(function (child) {
         if (child.isMesh)
         {
@@ -312,24 +295,12 @@ function Visible(a){  //a 區分in和ToggleButton
                 child.material.name === 'Material_Sclera' ||
                 // child.material.name === 'Material_Sclera_back' ||
                 child.material.name === 'Material_Iris')
-                if(a === 'in')
                 {
                     if(child.material.name === 'Material_Sclera' )
                         child.visible = false; 
-                    fadeMaterial(child.material, 1500,0); 
+                    fadeMaterial(child.material, 1500); 
                 }
-                else if(a === 'ToggleButton' && tag )
-                {
-                    if(child.material.name === 'Material_Sclera' )
-                        child.visible = true; 
-                    fadeInMaterial(child.material, 1000); 
-                    
-                } else 
-                {
-                    if(child.material.name === 'Material_Sclera' )
-                        child.visible = false; 
-                    fadeMaterial(child.material, 1500,0); 
-                }
+                
         }
     }); 
 }
@@ -352,20 +323,28 @@ document.getElementById('RButton').addEventListener('click', function(event) {
 //镜头放大
 document.getElementById('inButton').addEventListener('click', function() {
     animateCamera(new THREE.Vector3(0, 0, 500), 2000);
-    Visible('in');
-});
-//切换眼底图像
-document.getElementById('ToggleButton').addEventListener('click',  function() {
-    Visible('ToggleButton');
-});
-//叠加的图像
-document.getElementById('image1').addEventListener('click',  function() {
-    changeimage('eyebase.jpg',1);
-});
-document.getElementById('image2').addEventListener('click',  function() {
-    Transparent('007-3412-200.jpg',1.5);
+    Visible();
 });
 
+//叠加的图像
+document.getElementById('HE').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
+document.getElementById('MA').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
+document.getElementById('SE').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
+document.getElementById('EX').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
+document.getElementById('ArteryButton').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
+document.getElementById('VeinButton').addEventListener('click',  function() {
+    Transparent('007-3412-200.jpg',1.5);
+});
 
 /*
  * Helper function to render the scene 这里是把场景应用上
