@@ -27,15 +27,19 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000
 );
+// 获取 #app 元素
+const appContainer = document.getElementById('app');
 // AmbientLight
 const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 scene.add(ambientLight);
 // Create renderer
 const renderer = new THREE.WebGLRenderer();
 // 这里是控制页面大小
+// const width = appContainer.clientWidth; // 获取 #app 容器的宽度
+// const height = appContainer.clientHeight; // 获取 #app 容器的高度
+// renderer.setSize(width, height);
 renderer.setSize(window.innerWidth, window.innerHeight);
-//renderer.setSize(window.innerWidth/2, window.innerHeight/2);
-document.body.appendChild(renderer.domElement);
+appContainer.appendChild(renderer.domElement);
 // Set camera position
 camera.position.set(400, 400, 400);
 camera.lookAt(0, 0, 0);
@@ -325,7 +329,7 @@ document.getElementById('RButton').addEventListener('click', function(event) {
 });
 //镜头放大
 document.getElementById('inButton').addEventListener('click', function() {
-    animateCamera(new THREE.Vector3(0, 0, 550), 2000);
+    animateCamera(new THREE.Vector3(0, 0, 500), 2000);
     Visible('in');
 });
 //切换眼底图像
