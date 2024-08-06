@@ -40,7 +40,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 // Set camera position
 camera.position.set(400, 400, 400);
 camera.lookAt(0, 0, 0);
-// Add axesHelper 坐标轴
 
 // Orbit controls 控制鼠标对模型的缩放
 appContainer.appendChild(renderer.domElement);
@@ -53,7 +52,6 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const loader = new GLTFLoader();
 function loadModelAndApplyTexture(path){
     //reset global variable
-    tag =1;
     imagePaths = [];
     imagePathData = [];
 
@@ -70,7 +68,7 @@ function loadModelAndApplyTexture(path){
         }
     );
 }
-loadModelAndApplyTexture('left.jpg')
+loadModelAndApplyTexture('left.jpg');
 
 
 /*
@@ -239,7 +237,6 @@ function applyTexturesToMaterial(textures, effects) {
                 }
             `;
 
-
             const uniforms = {
                 oldTexture: { value: oldTexture },
                 ...textures.reduce((acc, texture, i) => {
@@ -281,7 +278,6 @@ function fadeMaterial(material, duration) {
 }
 
 
-
 /* 
  * 材质显示的按钮
  */
@@ -304,7 +300,6 @@ function Visible(){
         }
     }); 
 }
-
 
 
 /*
@@ -345,6 +340,7 @@ document.getElementById('ArteryButton').addEventListener('click',  function() {
 document.getElementById('VeinButton').addEventListener('click',  function() {
     Transparent('007-3412-200.jpg',1.5);
 });
+
 
 /*
  * Helper function to render the scene 这里是把场景应用上
