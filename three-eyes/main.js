@@ -323,7 +323,7 @@ document.getElementById('inButton').addEventListener('click', function() {
 
 //叠加的图像
 document.getElementById('HE').addEventListener('click',  function() {
-    Transparent('007-3412-200.jpg',1.5);
+    Transparent('HE.jpg',1.5);
 });
 document.getElementById('MA').addEventListener('click',  function() {
     Transparent('007-3412-200.jpg',1.5);
@@ -332,7 +332,7 @@ document.getElementById('SE').addEventListener('click',  function() {
     Transparent('007-3412-200.jpg',1.5);
 });
 document.getElementById('EX').addEventListener('click',  function() {
-    Transparent('007-3412-200.jpg',1.5);
+    Transparent('EX.jpg',1.5);
 });
 document.getElementById('ArteryButton').addEventListener('click',  function() {
     Transparent('007-3412-200.jpg',1.5);
